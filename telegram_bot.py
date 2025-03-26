@@ -5,6 +5,9 @@ from telegram import Update, Bot
 from telegram.ext import Application, CommandHandler, ContextTypes
 from config.config import TELEGRAM_CONFIG, TRADING_CONFIG
 from main import CryptoBot
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Configuration du logging
 logging.basicConfig(
@@ -93,31 +96,58 @@ async def send_status_message(context: ContextTypes.DEFAULT_TYPE):
     except Exception as e:
         logger.error(f"Erreur lors de l'envoi du message de statut : {e}")
 
-def run_bot():
-    """Lance le bot"""
-    # Créer l'application
-    application = Application.builder().token('7269334707:AAHS0X2aXPidWlSpum9pki6pfqjl4oY_M9s').build()
+async def settings(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("⚙️ Paramètres du bot:\n" + crypto_bot.get_settings())
 
-    # Ajouter les gestionnaires de commandes
-    application.add_handler(CommandHandler("start", start))
-    application.add_handler(CommandHandler("help", help_command))
-    application.add_handler(CommandHandler("balance", balance))
-    application.add_handler(CommandHandler("price", price))
-    application.add_handler(CommandHandler("status", status))
+async def trade(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    result = crypto_bot.execute_trade()
+    await update.message.reply_text(f"💰 Résultat du trade:\n{result}")
 
-    # Ajouter la tâche périodique (toutes les 10 secondes)
-    job_queue = application.job_queue
-    job_queue.run_repeating(send_status_message, interval=10, first=1)
+async def webhook_handler(request):
+    """Handle incoming webhook requests from Telegram."""
+    try:
+        TOKEN = os.getenv('TELEGRAM_TOKEN')
+        if not TOKEN:
+            raise ValueError("TELEGRAM_TOKEN not found in environment variables")
 
-    print("🚀 Bot démarré ! Appuyez sur Ctrl+C pour arrêter.")
+        app = Application.builder().token(TOKEN).build()
+        
+        # Add handlers
+        app.add_handler(CommandHandler("start", start))
+        app.add_handler(CommandHandler("help", help_command))
+        app.add_handler(CommandHandler("status", status))
+        app.add_handler(CommandHandler("settings", settings))
+        app.add_handler(CommandHandler("trade", trade))
 
-    # Démarrer le bot
-    application.run_polling(allowed_updates=Update.ALL_TYPES)
+        # Process update
+        update = Update.de_json(await request.json(), app.bot)
+        await app.process_update(update)
+        
+        return {"statusCode": 200, "body": "success"}
+    except Exception as e:
+        logger.error(f"Error processing webhook: {str(e)}")
+        return {"statusCode": 500, "body": str(e)}
+
+def main():
+    """Run the bot in polling mode for local development."""
+    try:
+        TOKEN = os.getenv('TELEGRAM_TOKEN')
+        if not TOKEN:
+            raise ValueError("TELEGRAM_TOKEN not found in environment variables")
+
+        app = Application.builder().token(TOKEN).build()
+        
+        # Add handlers
+        app.add_handler(CommandHandler("start", start))
+        app.add_handler(CommandHandler("help", help_command))
+        app.add_handler(CommandHandler("status", status))
+        app.add_handler(CommandHandler("settings", settings))
+        app.add_handler(CommandHandler("trade", trade))
+
+        # Start the bot in polling mode
+        app.run_polling(allowed_updates=Update.ALL_TYPES)
+    except Exception as e:
+        logger.error(f"Error running bot: {str(e)}")
 
 if __name__ == '__main__':
-    try:
-        run_bot()
-    except KeyboardInterrupt:
-        print("\n👋 Bot arrêté par l'utilisateur")
-    except Exception as e:
-        print(f"❌ Une erreur est survenue : {e}") 
+    main() 
