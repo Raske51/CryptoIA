@@ -3,8 +3,9 @@ python-dotenv==1.0.0
 numpy==1.26.3
 pandas==2.1.4
 requests==2.31.0
-ccxt==4.1.13
-python-telegram-bot==20.7
+ccxt==4.2.86
+python-telegram-bot==20.6
 setuptools>=69.0.0
 wheel>=0.42.0
-werkzeug==3.0.1 
+werkzeug==3.0.1
+vercel==0.7.0 
