@@ -1,8 +1,18 @@
 {
+  "version": 2,
   "builds": [
-    { "src": "telegram_bot.py", "use": "@vercel/python" }
+    {
+      "src": "telegram_bot.py",
+      "use": "@vercel/python@3.1.0",
+      "config": {
+        "runtime": "python3.9"
+      }
+    }
   ],
   "routes": [
-    { "src": "/(.*)", "dest": "telegram_bot.py" }
+    {
+      "src": "/(.*)",
+      "dest": "telegram_bot.py"
+    }
   ]
 } 
