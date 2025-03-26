@@ -1,0 +1,187 @@
+{
+    "grafana": {
+        "url": "http://localhost:3000",
+        "api_key": "${GRAFANA_API_KEY}",
+        "dashboard": {
+            "title": "Trading Bot Dashboard",
+            "panels": [
+                {
+                    "title": "Performance",
+                    "type": "graph",
+                    "datasource": "InfluxDB",
+                    "targets": [
+                        {
+                            "query": "SELECT mean(\"value\") FROM \"trading_metrics\" WHERE $timeFilter GROUP BY time($interval)",
+                            "legendFormat": "{{metric}}"
+                        }
+                    ]
+                },
+                {
+                    "title": "Risques",
+                    "type": "gauge",
+                    "datasource": "InfluxDB",
+                    "targets": [
+                        {
+                            "query": "SELECT last(\"value\") FROM \"risk_metrics\" WHERE $timeFilter",
+                            "legendFormat": "{{metric}}"
+                        }
+                    ]
+                },
+                {
+                    "title": "Système",
+                    "type": "row",
+                    "panels": [
+                        {
+                            "title": "CPU",
+                            "type": "gauge",
+                            "datasource": "InfluxDB",
+                            "targets": [
+                                {
+                                    "query": "SELECT last(\"value\") FROM \"system_metrics\" WHERE \"metric\" = 'cpu_percent'",
+                                    "legendFormat": "CPU Usage"
+                                }
+                            ]
+                        },
+                        {
+                            "title": "Mémoire",
+                            "type": "gauge",
+                            "datasource": "InfluxDB",
+                            "targets": [
+                                {
+                                    "query": "SELECT last(\"value\") FROM \"system_metrics\" WHERE \"metric\" = 'memory_percent'",
+                                    "legendFormat": "Memory Usage"
+                                }
+                            ]
+                        },
+                        {
+                            "title": "Disque",
+                            "type": "gauge",
+                            "datasource": "InfluxDB",
+                            "targets": [
+                                {
+                                    "query": "SELECT last(\"value\") FROM \"system_metrics\" WHERE \"metric\" = 'disk_percent'",
+                                    "legendFormat": "Disk Usage"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    },
+    "security": {
+        "scan_interval": 3600,
+        "vulnerability_threshold": 0.7,
+        "auto_fix": true,
+        "checks": {
+            "dependencies": {
+                "enabled": true,
+                "severity_threshold": "high"
+            },
+            "configurations": {
+                "enabled": true,
+                "check_files": [
+                    "config/*.json",
+                    "config/*.yaml",
+                    "config/*.env"
+                ]
+            },
+            "permissions": {
+                "enabled": true,
+                "check_paths": [
+                    "logs/",
+                    "data/",
+                    "reports/"
+                ]
+            }
+        }
+    },
+    "optimization": {
+        "data_window": "7d",
+        "iterations": 1000,
+        "risk_level": 3,
+        "parameters": {
+            "stop_loss": {
+                "min": 0.01,
+                "max": 0.05,
+                "step": 0.01
+            },
+            "take_profit": {
+                "min": 0.02,
+                "max": 0.1,
+                "step": 0.01
+            },
+            "rsi_period": {
+                "min": 7,
+                "max": 21,
+                "step": 1
+            },
+            "macd_fast": {
+                "min": 8,
+                "max": 16,
+                "step": 1
+            },
+            "macd_slow": {
+                "min": 21,
+                "max": 34,
+                "step": 1
+            }
+        },
+        "metrics": {
+            "sharpe_ratio": {
+                "min": 1.0,
+                "weight": 0.3
+            },
+            "max_drawdown": {
+                "max": 0.1,
+                "weight": 0.3
+            },
+            "win_rate": {
+                "min": 0.5,
+                "weight": 0.2
+            },
+            "profit_factor": {
+                "min": 1.5,
+                "weight": 0.2
+            }
+        }
+    },
+    "health": {
+        "thresholds": {
+            "cpu_percent": 80,
+            "memory_percent": 80,
+            "disk_percent": 80,
+            "response_time": 2.0
+        },
+        "check_interval": 300,
+        "alert_cooldown": 1800,
+        "retry_attempts": 3,
+        "retry_delay": 1
+    },
+    "alerts": {
+        "telegram": {
+            "enabled": true,
+            "chat_id": "${TELEGRAM_ADMIN_ID}",
+            "cooldown": 1800
+        },
+        "email": {
+            "enabled": true,
+            "recipients": ["${ALERT_EMAIL}"],
+            "cooldown": 3600
+        },
+        "severity_levels": {
+            "critical": {
+                "channels": ["telegram", "email"],
+                "cooldown": 300
+            },
+            "warning": {
+                "channels": ["telegram"],
+                "cooldown": 1800
+            },
+            "info": {
+                "channels": ["telegram"],
+                "cooldown": 3600
+            }
+        }
+    }
+} 
