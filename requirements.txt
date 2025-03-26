@@ -8,4 +8,5 @@ python-telegram-bot==20.6
 setuptools>=69.0.0
 wheel>=0.42.0
 werkzeug==3.0.1
-vercel==0.7.0 
+vercel==0.7.0
+TA-Lib==0.4.28 
