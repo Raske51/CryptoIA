@@ -1,6 +1,7 @@
 import os
 import logging
 import asyncio
+from vercel import Request, Response
 from telegram import Update, Bot
 from telegram.ext import Application, CommandHandler, ContextTypes
 from config.config import TELEGRAM_CONFIG, TRADING_CONFIG
@@ -9,12 +10,11 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# Configuration du logging
+# Configuration du logging détaillé
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     level=logging.INFO
 )
-
 logger = logging.getLogger(__name__)
 
 # Initialisation du bot de trading
@@ -128,26 +128,22 @@ async def webhook_handler(request):
         logger.error(f"Error processing webhook: {str(e)}")
         return {"statusCode": 500, "body": str(e)}
 
-def main():
-    """Run the bot in polling mode for local development."""
+def main(request: Request) -> Response:
+    """Handle incoming requests from Vercel."""
     try:
-        TOKEN = os.getenv('TELEGRAM_TOKEN')
-        if not TOKEN:
-            raise ValueError("TELEGRAM_TOKEN not found in environment variables")
-
-        app = Application.builder().token(TOKEN).build()
+        logger.info("Démarrage du bot Telegram sur Vercel")
+        logger.info(f"Méthode de la requête: {request.method}")
+        logger.info(f"Corps de la requête: {request.json()}")
         
-        # Add handlers
-        app.add_handler(CommandHandler("start", start))
-        app.add_handler(CommandHandler("help", help_command))
-        app.add_handler(CommandHandler("status", status))
-        app.add_handler(CommandHandler("settings", settings))
-        app.add_handler(CommandHandler("trade", trade))
-
-        # Start the bot in polling mode
-        app.run_polling(allowed_updates=Update.ALL_TYPES)
+        result = asyncio.run(webhook_handler(request))
+        logger.info(f"Résultat du traitement: {result}")
+        
+        return Response.json({"status": "success", "result": result})
     except Exception as e:
-        logger.error(f"Error running bot: {str(e)}")
+        logger.error(f"ERREUR CRITIQUE: {str(e)}", exc_info=True)
+        return Response.json({"error": str(e)}, status=500)
 
 if __name__ == '__main__':
+    # En mode local, utiliser le polling
+    logger.info("Démarrage du bot Telegram en mode local")
     main() 

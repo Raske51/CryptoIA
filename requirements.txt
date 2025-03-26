@@ -7,5 +7,4 @@ ccxt==4.1.13
 python-telegram-bot==20.7
 setuptools>=69.0.0
 wheel>=0.42.0
-distutils-precedence>=0.1.0
 werkzeug==3.0.1 
