@@ -1,0 +1,6 @@
+@echo off
+echo Installing dependencies...
+"C:\Users\antho\AppData\Local\Programs\Python\Python311\python.exe" -m pip install -r requirements.txt
+echo Starting bot...
+"C:\Users\antho\AppData\Local\Programs\Python\Python311\python.exe" telegram_bot.py
+pause 
