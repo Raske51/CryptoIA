@@ -1,16 +1,18 @@
 import os
 import logging
+import asyncio
 from telegram import Update, Bot
 from telegram.ext import Application, CommandHandler, ContextTypes
 from config.config import TELEGRAM_CONFIG, TRADING_CONFIG
 from main import CryptoBot
-import time
 
 # Configuration du logging
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     level=logging.INFO
 )
+
+logger = logging.getLogger(__name__)
 
 # Initialisation du bot de trading
 crypto_bot = CryptoBot()
@@ -81,23 +83,41 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
     await update.message.reply_text(help_text)
 
-def main():
-    # Initialize the bot with your token
-    bot = Bot(token='7269334707:AAHS0X2aXPidWlSpum9pki6pfq-jl4oY_M9s')
-    
-    # Chat ID where messages will be sent
-    chat_id = '7072895112'
-    
-    print("Bot started! Sending messages every 10 seconds...")
-    
+async def send_status_message(context: ContextTypes.DEFAULT_TYPE):
+    """Envoie un message de statut périodique"""
     try:
-        while True:
-            bot.send_message(chat_id=chat_id, text="🤖 Bot en marche !")
-            time.sleep(10)  # Wait for 10 seconds before sending next message
-    except KeyboardInterrupt:
-        print("\nBot stopped by user")
+        await context.bot.send_message(
+            chat_id='7072895112',
+            text="🤖 Bot en marche !"
+        )
     except Exception as e:
-        print(f"An error occurred: {e}")
+        logger.error(f"Erreur lors de l'envoi du message de statut : {e}")
 
-if __name__ == "__main__":
-    main() 
+def run_bot():
+    """Lance le bot"""
+    # Créer l'application
+    application = Application.builder().token('7269334707:AAHS0X2aXPidWlSpum9pki6pfqjl4oY_M9s').build()
+
+    # Ajouter les gestionnaires de commandes
+    application.add_handler(CommandHandler("start", start))
+    application.add_handler(CommandHandler("help", help_command))
+    application.add_handler(CommandHandler("balance", balance))
+    application.add_handler(CommandHandler("price", price))
+    application.add_handler(CommandHandler("status", status))
+
+    # Ajouter la tâche périodique (toutes les 10 secondes)
+    job_queue = application.job_queue
+    job_queue.run_repeating(send_status_message, interval=10, first=1)
+
+    print("🚀 Bot démarré ! Appuyez sur Ctrl+C pour arrêter.")
+
+    # Démarrer le bot
+    application.run_polling(allowed_updates=Update.ALL_TYPES)
+
+if __name__ == '__main__':
+    try:
+        run_bot()
+    except KeyboardInterrupt:
+        print("\n👋 Bot arrêté par l'utilisateur")
+    except Exception as e:
+        print(f"❌ Une erreur est survenue : {e}") 
