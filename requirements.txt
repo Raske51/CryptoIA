@@ -8,4 +8,4 @@ python-telegram-bot==20.7
 setuptools>=65.5.1
 wheel>=0.38.0
 distutils-precedence>=0.1.0
-werkzeug==1.0.1 
+werkzeug==2.0.1 
