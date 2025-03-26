@@ -5,8 +5,7 @@
       "src": "telegram_bot.py",
       "use": "@vercel/python@3.1.0",
       "config": {
-        "maxLambdaSize": "15mb",
-        "runtime": "python3.12"
+        "maxLambdaSize": "15mb"
       }
     }
   ],
