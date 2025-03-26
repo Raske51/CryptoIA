@@ -6,4 +6,5 @@ requests==2.31.0
 ccxt==4.1.13
 python-telegram-bot==20.7
 setuptools>=65.5.1
-wheel>=0.38.0 
+wheel>=0.38.0
+distutils-precedence>=0.1.0 
